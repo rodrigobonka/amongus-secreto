@@ -3,7 +3,13 @@ const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
+
+// Códigos fijos por participante (como contraseñas: mismo nombre = mismos códigos siempre)
+function codigoFijo(nombre, tipo) {
+  return crypto.createHash('sha256').update('amongus2026_' + tipo + '_' + nombre).digest('hex').slice(0, 12);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -48,12 +54,12 @@ function loadData() {
   } catch (_) {}
 
   const data = {
-    adminKey: 'amongus14',  // Clave fija para los buzones preconfigurados
+    adminKey: 'amongus14',
     buzzones: participantes.map((nombre) => ({
       id: uuidv4(),
       nombre,
-      codigoSubida: uuidv4().replace(/-/g, '').slice(0, 12),
-      codigoVision: uuidv4().replace(/-/g, '').slice(0, 12),
+      codigoSubida: codigoFijo(nombre, 'subida'),
+      codigoVision: codigoFijo(nombre, 'vision'),
       items: []
     }))
   };
