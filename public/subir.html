@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subir al buzón - AmongUs Secreto</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+  <div class="min-vh-100 d-flex flex-column">
+    <nav class="navbar navbar-expand-lg navbar-light py-3">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="/">
+          <i class="bi bi-envelope-heart-fill me-2"></i>AmongUs Secreto
+        </a>
+        <div class="navbar-nav ms-auto">
+          <a class="nav-link" href="/">Inicio</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="flex-grow-1 py-5">
+      <div class="container" style="max-width: 680px;">
+        <div class="text-center mb-4">
+          <h1 class="h3 fw-bold">💌 Dejar algo en el buzón</h1>
+          <p class="text-muted">Código para el buzón de tu amigue secreto. Nadie sabrá quién dejó cada cosa 👀</p>
+        </div>
+
+        <div id="alerta" class="alert alert-dismissible fade d-none" role="alert"></div>
+
+        <div class="card card-action p-4 mb-4">
+          <form id="formSubir">
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Código de subida</label>
+              <input type="text" class="form-control form-control-lg" id="codigoSubida"
+                     placeholder="Pega el código que te dieron" required autocomplete="off">
+            </div>
+
+            <!-- Mensaje (siempre visible) -->
+            <div class="mb-4">
+              <label class="form-label">Mensaje o carta <span class="text-muted">(obligatorio para texto, opcional con archivos)</span></label>
+              <textarea class="form-control" id="mensaje" rows="4"
+                        placeholder="Escribe tu mensaje cursi, poema, chiste... lo que quieras 💕"></textarea>
+            </div>
+
+            <hr class="my-4">
+
+            <p class="text-muted small mb-3">¿Qué más vas a enviar?</p>
+
+            <div class="row g-2 mb-3">
+              <div class="col-12 col-sm-4">
+                <button type="button" class="btn btn-outline-primary w-100 py-3 tipo-btn" data-tipo="foto">
+                  <i class="bi bi-image d-block fs-3 mb-1"></i>
+                  Subir foto
+                </button>
+              </div>
+              <div class="col-12 col-sm-4">
+                <button type="button" class="btn btn-outline-primary w-100 py-3 tipo-btn" data-tipo="cancion">
+                  <i class="bi bi-music-note-beamed d-block fs-3 mb-1"></i>
+                  Subir canción
+                </button>
+              </div>
+              <div class="col-12 col-sm-4">
+                <button type="button" class="btn btn-outline-primary w-100 py-3 tipo-btn" data-tipo="archivo">
+                  <i class="bi bi-file-earmark-arrow-up d-block fs-3 mb-1"></i>
+                  Subir archivo
+                </button>
+              </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-12 col-sm-6">
+                <button type="button" class="btn btn-outline-secondary w-100 py-3 tipo-btn" data-tipo="texto">
+                  <i class="bi bi-chat-quote d-block fs-3 mb-1"></i>
+                  Solo mensaje
+                </button>
+              </div>
+              <div class="col-12 col-sm-6">
+                <button type="button" class="btn btn-outline-secondary w-100 py-3 tipo-btn" data-tipo="link">
+                  <i class="bi bi-link-45deg d-block fs-3 mb-1"></i>
+                  Enviar link
+                </button>
+              </div>
+            </div>
+
+            <!-- Zona de archivo -->
+            <div id="zonaArchivo" class="mb-4 d-none">
+              <div class="drop-zone p-4 text-center" id="dropZone">
+                <i class="bi bi-cloud-arrow-up display-5 text-muted d-block mb-2"></i>
+                <p class="mb-1" id="dropZoneTexto">Arrastra un archivo o haz clic</p>
+                <p class="small text-muted mb-0" id="dropZoneHint">Máx 100MB</p>
+                <input type="file" id="archivo" class="d-none">
+              </div>
+              <div id="archivoNombre" class="mt-2 d-none">
+                <span class="badge bg-primary rounded-pill px-3 py-2">
+                  <i class="bi bi-check-circle me-1"></i><span id="archivoNombreTexto"></span>
+                  <button type="button" class="btn btn-sm btn-link text-white p-0 ms-1" id="quitarArchivo">&times;</button>
+                </span>
+              </div>
+            </div>
+
+            <!-- Zona de link -->
+            <div id="zonaLink" class="mb-4 d-none">
+              <label class="form-label">URL (playlist, video, meme, etc.)</label>
+              <input type="url" class="form-control mb-2" id="linkUrl" placeholder="https://...">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill py-3 mt-2" id="btnEnviar">
+              <i class="bi bi-send-fill me-2"></i>Enviar al buzón
+            </button>
+          </form>
+        </div>
+
+        <p class="text-center text-muted small">
+          <i class="bi bi-shield-check"></i> 100% anónimo. Quien reciba no verá quién lo envió.
+        </p>
+      </div>
+    </main>
+
+    <footer class="py-4 text-center text-muted small mt-auto">
+      <p class="mb-0">Project by Rodrigo Bonka 2026</p>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const codigoSubida = document.getElementById('codigoSubida');
+    const mensaje = document.getElementById('mensaje');
+    const zonaArchivo = document.getElementById('zonaArchivo');
+    const zonaLink = document.getElementById('zonaLink');
+    const dropZone = document.getElementById('dropZone');
+    const dropZoneTexto = document.getElementById('dropZoneTexto');
+    const dropZoneHint = document.getElementById('dropZoneHint');
+    const archivoInput = document.getElementById('archivo');
+    const archivoNombre = document.getElementById('archivoNombre');
+    const archivoNombreTexto = document.getElementById('archivoNombreTexto');
+    const linkUrl = document.getElementById('linkUrl');
+
+    const acceptPorTipo = {
+      foto: 'image/*',
+      cancion: 'audio/*',
+      archivo: '.jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.txt,.mp3,.wav,.m4a,.mp4,.webm,.mov'
+    };
+
+    let tipoActual = 'texto';
+
+    document.querySelectorAll('.tipo-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tipo-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        tipoActual = btn.dataset.tipo;
+
+        zonaArchivo.classList.add('d-none');
+        zonaLink.classList.add('d-none');
+        archivoInput.value = '';
+        archivoNombre.classList.add('d-none');
+        linkUrl.value = '';
+
+        if (tipoActual === 'foto' || tipoActual === 'cancion' || tipoActual === 'archivo') {
+          zonaArchivo.classList.remove('d-none');
+          archivoInput.accept = acceptPorTipo[tipoActual] || '*';
+          dropZoneTexto.textContent = tipoActual === 'foto' ? 'Arrastra una foto o haz clic' :
+            tipoActual === 'cancion' ? 'Arrastra un audio o haz clic' : 'Arrastra un archivo o haz clic';
+          dropZoneHint.textContent = 'JPG, PNG, GIF, WebP, HEIC (fotos) · MP3, WAV, M4A (audio) · PDF, MP4, etc. Máx 100MB';
+        } else if (tipoActual === 'link') {
+          zonaLink.classList.remove('d-none');
+        }
+      });
+    });
+
+    dropZone.addEventListener('click', () => archivoInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        archivoInput.files = e.dataTransfer.files;
+        archivoNombreTexto.textContent = e.dataTransfer.files[0].name;
+        archivoNombre.classList.remove('d-none');
+      }
+    });
+    archivoInput.addEventListener('change', () => {
+      if (archivoInput.files.length) {
+        archivoNombreTexto.textContent = archivoInput.files[0].name;
+        archivoNombre.classList.remove('d-none');
+      }
+    });
+    document.getElementById('quitarArchivo').addEventListener('click', () => {
+      archivoInput.value = '';
+      archivoNombre.classList.add('d-none');
+    });
+
+    // Estado inicial: solo mensaje
+    document.querySelector('.tipo-btn[data-tipo="texto"]').classList.add('active');
+
+    function mostrarAlerta(msg, tipo = 'success') {
+      const el = document.getElementById('alerta');
+      el.className = `alert alert-${tipo} alert-dismissible fade show`;
+      el.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+      el.classList.remove('d-none');
+    }
+
+    document.getElementById('formSubir').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const codigo = codigoSubida.value.trim();
+      const contenido = mensaje.value.trim();
+      const btn = document.getElementById('btnEnviar');
+
+      if (!codigo) {
+        mostrarAlerta('Pon tu código de subida 💕', 'warning');
+        return;
+      }
+
+      if (tipoActual === 'texto' && !contenido) {
+        mostrarAlerta('Escribe un mensaje 💕', 'warning');
+        return;
+      }
+
+      if (tipoActual === 'link') {
+        if (!linkUrl.value.trim()) {
+          mostrarAlerta('Pon el link', 'warning');
+          return;
+        }
+        btn.disabled = true;
+        try {
+          const r = await fetch('/api/subir-link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              codigoSubida: codigo,
+              tipo: 'link',
+              contenido: contenido || linkUrl.value,
+              link: linkUrl.value.trim()
+            })
+          });
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(data.error || 'Error al subir');
+          mostrarAlerta(data.mensaje || '¡Enviado! 💌', 'success');
+          mensaje.value = '';
+          linkUrl.value = '';
+        } catch (err) {
+          mostrarAlerta(err.message || 'Error. Revisa el código.', 'danger');
+        }
+        btn.disabled = false;
+        return;
+      }
+
+      if (tipoActual === 'texto') {
+        btn.disabled = true;
+        try {
+          const r = await fetch('/api/subir-link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ codigoSubida: codigo, tipo: 'texto', contenido })
+          });
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(data.error || 'Error al subir');
+          mostrarAlerta(data.mensaje || '¡Enviado! 💌', 'success');
+          mensaje.value = '';
+        } catch (err) {
+          mostrarAlerta(err.message || 'Error. Revisa el código.', 'danger');
+        }
+        btn.disabled = false;
+        return;
+      }
+
+      // Foto, canción o archivo
+      if (!archivoInput.files.length) {
+        mostrarAlerta('Selecciona un archivo', 'warning');
+        return;
+      }
+      btn.disabled = true;
+      try {
+        const fd = new FormData();
+        fd.append('codigoSubida', codigo);
+        fd.append('tipo', 'archivo');
+        fd.append('contenido', contenido);
+        fd.append('archivo', archivoInput.files[0]);
+        const r = await fetch('/api/subir', { method: 'POST', body: fd });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.error || 'Error al subir');
+        mostrarAlerta(data.mensaje || '¡Enviado! 💌', 'success');
+        mensaje.value = '';
+        archivoInput.value = '';
+        archivoNombre.classList.add('d-none');
+      } catch (err) {
+        mostrarAlerta(err.message || 'Error. Revisa el código y el tipo de archivo.', 'danger');
+      }
+      btn.disabled = false;
+    });
+  </script>
+</body>
+</html>

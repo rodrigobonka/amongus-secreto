@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ver mi buzón - AmongUs Secreto</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+  <div class="min-vh-100 d-flex flex-column">
+    <nav class="navbar navbar-expand-lg navbar-light py-3">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="/">
+          <i class="bi bi-envelope-heart-fill me-2"></i>AmongUs Secreto
+        </a>
+        <div class="navbar-nav ms-auto">
+          <a class="nav-link" href="/">Inicio</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="flex-grow-1 py-5">
+      <div class="container" style="max-width: 720px;">
+        <div id="vistaEntrada" class="text-center">
+          <h1 class="h3 fw-bold mb-3">📬 Abrir mi buzón</h1>
+          <p class="text-muted mb-4">Con tu código personal puedes ver todo lo que te dejó tu amigue secreto 🥹</p>
+          <div class="card card-action p-4 mb-4" style="max-width: 400px; margin: 0 auto;">
+            <label class="form-label text-start">Tu código de visualización</label>
+            <input type="text" class="form-control form-control-lg mb-3" id="codigoVision" 
+                   placeholder="Pega tu código aquí">
+            <button class="btn btn-primary btn-lg w-100 rounded-pill" id="btnAbrir">
+              <i class="bi bi-inbox"></i> Abrir buzón
+            </button>
+          </div>
+        </div>
+
+        <div id="vistaBuzon" class="d-none">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h4 mb-0">📬 Buzón de <span id="nombreBuzon"></span></h2>
+            <a href="ver.html" class="btn btn-outline-secondary btn-sm">Cambiar código</a>
+          </div>
+
+          <div id="listaItems"></div>
+
+          <div id="buzonVacio" class="text-center py-5 text-muted d-none">
+            <i class="bi bi-inbox display-1 d-block mb-3 opacity-50"></i>
+            <p class="mb-0">Tu buzón está vacío... por ahora 👀</p>
+            <p class="small">Del 9 al 13 de febrero se irán llenando. ¡Vuelve el 14! 💕</p>
+          </div>
+        </div>
+
+        <div id="alerta" class="alert alert-dismissible fade d-none" role="alert"></div>
+      </div>
+    </main>
+
+    <footer class="py-4 text-center text-muted small mt-auto">
+      <p class="mb-0">Project by Rodrigo Bonka 2026</p>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const codigoInput = document.getElementById('codigoVision');
+    const btnAbrir = document.getElementById('btnAbrir');
+    const vistaEntrada = document.getElementById('vistaEntrada');
+    const vistaBuzon = document.getElementById('vistaBuzon');
+    const nombreBuzon = document.getElementById('nombreBuzon');
+    const listaItems = document.getElementById('listaItems');
+    const buzonVacio = document.getElementById('buzonVacio');
+
+    function mostrarAlerta(msg, tipo = 'danger') {
+      const el = document.getElementById('alerta');
+      el.className = `alert alert-${tipo} alert-dismissible fade show`;
+      el.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+      el.classList.remove('d-none');
+    }
+
+    function iconoTipo(t) {
+      const map = { texto: 'bi-chat-quote', archivo: 'bi-file-earmark', link: 'bi-link-45deg' };
+      return map[t] || 'bi-gift';
+    }
+
+    function renderItem(item) {
+      const div = document.createElement('div');
+      div.className = 'buzon-item p-4 mb-3';
+      const icono = iconoTipo(item.tipo);
+      let contenido = '';
+      if (item.tipo === 'texto') {
+        contenido = `<p class="mb-0 white-space-pre-wrap">${escapeHtml(item.contenido)}</p>`;
+      } else if (item.tipo === 'link') {
+        const linkText = item.contenido || item.link;
+        contenido = `<a href="${escapeHtml(item.link)}" target="_blank" rel="noopener" class="text-decoration-none text-info">${escapeHtml(linkText)} <i class="bi bi-box-arrow-up-right small"></i></a>`;
+      } else if (item.archivo) {
+        const ext = (item.archivo || '').split('.').pop().toLowerCase().split('?')[0];
+        const esImg = ['jpg','jpeg','png','gif','webp','bmp','svg'].includes(ext);
+        const esAudio = ['mp3','wav','m4a','ogg','aac','flac'].includes(ext);
+        const esVideo = ['mp4','webm','mov','avi','mkv'].includes(ext);
+        let html = '';
+        if (esImg && !['heic','heif'].includes(ext)) html = `<img src="${item.archivo}" class="img-fluid rounded mb-2" style="max-height: 400px;" alt="Imagen">`;
+        else if (esAudio) html = `<audio controls class="w-100"><source src="${item.archivo}"></audio>`;
+        else if (esVideo) html = `<video controls class="w-100 rounded" style="max-height: 400px;"><source src="${item.archivo}"></video>`;
+        else html = `<a href="${item.archivo}" target="_blank" download class="btn btn-outline-primary btn-sm"><i class="bi bi-download"></i> Descargar archivo</a>`;
+        if (item.contenido) html += `<p class="mt-2 mb-0">${escapeHtml(item.contenido)}</p>`;
+        contenido = html;
+      }
+      const fecha = new Date(item.fecha).toLocaleDateString('es', { day: 'numeric', month: 'short' });
+      div.innerHTML = `
+        <div class="d-flex align-items-start">
+          <span class="icon-circle me-3" style="width: 48px; height: 48px; font-size: 1.2rem;">
+            <i class="bi ${icono}"></i>
+          </span>
+          <div class="flex-grow-1">
+            <p class="text-muted small mb-1">💌 De alguien secreto · ${fecha}</p>
+            ${contenido}
+          </div>
+        </div>
+      `;
+      return div;
+    }
+
+    function escapeHtml(s) {
+      if (!s) return '';
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    async function abrirBuzon() {
+      const codigo = codigoInput.value.trim();
+      if (!codigo) { mostrarAlerta('Pon tu código 💕', 'warning'); return; }
+      btnAbrir.disabled = true;
+      try {
+        const r = await fetch(`/api/buzon?codigoVision=${encodeURIComponent(codigo)}`);
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Código no válido');
+        vistaEntrada.classList.add('d-none');
+        vistaBuzon.classList.remove('d-none');
+        nombreBuzon.textContent = data.nombre;
+        listaItems.innerHTML = '';
+        if (!data.items || data.items.length === 0) {
+          buzonVacio.classList.remove('d-none');
+        } else {
+          buzonVacio.classList.add('d-none');
+          data.items.forEach((item) => listaItems.appendChild(renderItem(item)));
+        }
+      } catch (err) {
+        mostrarAlerta(err.message || 'Código incorrecto. Revisa y prueba de nuevo.');
+      }
+      btnAbrir.disabled = false;
+    }
+
+    btnAbrir.addEventListener('click', abrirBuzon);
+    codigoInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') abrirBuzon(); });
+  </script>
+</body>
+</html>
