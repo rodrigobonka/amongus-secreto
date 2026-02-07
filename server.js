@@ -115,7 +115,12 @@ app.post('/api/admin/buzzones', (req, res) => {
   const { adminKey, participantes } = req.body;
   const data = loadData();
   const esPrimeraVez = !data.buzzones || data.buzzones.length === 0;
-  if (!esPrimeraVez && adminKey !== data.adminKey) return res.status(403).json({ error: 'Clave admin incorrecta' });
+
+  // Los códigos son definitivos: una vez creados, no se pueden cambiar
+  if (!esPrimeraVez) {
+    return res.status(403).json({ error: 'Los buzones ya existen. Los códigos de subida y visión son definitivos y no pueden cambiarse.' });
+  }
+  if (adminKey !== data.adminKey) return res.status(403).json({ error: 'Clave admin incorrecta' });
 
   const nombres = Array.isArray(participantes)
     ? participantes.map((p) => String(p).trim()).filter(Boolean)
@@ -145,6 +150,24 @@ app.get('/api/admin/info', (req, res) => {
       codigoVision: b.codigoVision
     }))
   });
+});
+
+// ============ INFO POR CÓDIGO (para mostrar nombre) ============
+
+app.get('/api/codigo-subida-info', (req, res) => {
+  const { codigo } = req.query;
+  const data = loadData();
+  const buzton = data.buzzones.find((b) => b.codigoSubida === codigo);
+  if (!buzton) return res.status(404).json({ error: 'Código no válido' });
+  res.json({ nombre: buzton.nombre });
+});
+
+app.get('/api/buzon-nombre', (req, res) => {
+  const { codigoVision } = req.query;
+  const data = loadData();
+  const buzton = data.buzzones.find((b) => b.codigoVision === codigoVision);
+  if (!buzton) return res.status(404).json({ error: 'Código no válido' });
+  res.json({ nombre: buzton.nombre });
 });
 
 // ============ SUBIR (anónimo) ============

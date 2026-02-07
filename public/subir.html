@@ -17,7 +17,7 @@
           <i class="bi bi-envelope-heart-fill me-2"></i>AmongUs Secreto
         </a>
         <div class="navbar-nav ms-auto">
-          <a class="nav-link" href="/"><i class="fa-solid fa-house me-1"></i>Home</a>
+          <a class="nav-link" href="/" title="Inicio"><i class="fa-solid fa-house"></i></a>
           <a class="nav-link" href="login.html">Login</a>
         </div>
       </div>
@@ -38,6 +38,7 @@
               <label class="form-label fw-semibold">Código de subida</label>
               <input type="text" class="form-control form-control-lg" id="codigoSubida"
                      placeholder="Pega el código que te dieron" required autocomplete="off">
+              <div id="nombreBuzonSubida" class="mt-2 text-success fw-medium small d-none"></div>
             </div>
 
             <!-- Mensaje (siempre visible) -->
@@ -198,6 +199,29 @@
     // Estado inicial: solo mensaje
     document.querySelector('.tipo-btn[data-tipo="texto"]').classList.add('active');
 
+    let debounceTimer;
+    codigoSubida.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const el = document.getElementById('nombreBuzonSubida');
+      el.classList.add('d-none');
+      const codigo = codigoSubida.value.trim();
+      if (!codigo || codigo.length < 8) return;
+      debounceTimer = setTimeout(async () => {
+        try {
+          const r = await fetch(`/api/codigo-subida-info?codigo=${encodeURIComponent(codigo)}`);
+          const data = await r.json().catch(() => ({}));
+          if (r.ok) {
+            el.textContent = `✓ Estás dejando algo en el buzón de ${data.nombre}`;
+            el.classList.remove('d-none');
+          } else {
+            el.classList.add('d-none');
+          }
+        } catch (_) {
+          el.classList.add('d-none');
+        }
+      }, 400);
+    });
+
     function mostrarAlerta(msg, tipo = 'success') {
       const el = document.getElementById('alerta');
       el.className = `alert alert-${tipo} alert-dismissible fade show`;
@@ -240,9 +264,9 @@
           });
           const data = await r.json().catch(() => ({}));
           if (!r.ok) throw new Error(data.error || 'Error al subir');
-          mostrarAlerta(data.mensaje || '¡Enviado! 💌', 'success');
-          mensaje.value = '';
-          linkUrl.value = '';
+          mostrarAlerta('✓ Envío exitoso. Redirigiendo al inicio...', 'success');
+          setTimeout(() => { window.location.href = '/'; }, 1800);
+          return;
         } catch (err) {
           mostrarAlerta(err.message || 'Error. Revisa el código.', 'danger');
         }
@@ -260,8 +284,9 @@
           });
           const data = await r.json().catch(() => ({}));
           if (!r.ok) throw new Error(data.error || 'Error al subir');
-          mostrarAlerta(data.mensaje || '¡Enviado! 💌', 'success');
-          mensaje.value = '';
+          mostrarAlerta('✓ Envío exitoso. Redirigiendo al inicio...', 'success');
+          setTimeout(() => { window.location.href = '/'; }, 1800);
+          return;
         } catch (err) {
           mostrarAlerta(err.message || 'Error. Revisa el código.', 'danger');
         }
@@ -284,10 +309,8 @@
         const r = await fetch('/api/subir', { method: 'POST', body: fd });
         const data = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(data.error || 'Error al subir');
-        mostrarAlerta(data.mensaje || '¡Enviado! 💌', 'success');
-        mensaje.value = '';
-        archivoInput.value = '';
-        archivoNombre.classList.add('d-none');
+        mostrarAlerta('✓ Envío exitoso. Redirigiendo al inicio...', 'success');
+        setTimeout(() => { window.location.href = '/'; }, 1800);
       } catch (err) {
         mostrarAlerta(err.message || 'Error. Revisa el código y el tipo de archivo.', 'danger');
       }

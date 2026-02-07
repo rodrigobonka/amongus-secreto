@@ -17,7 +17,7 @@
           <i class="bi bi-envelope-heart-fill me-2"></i>AmongUs Secreto
         </a>
         <div class="navbar-nav ms-auto">
-          <a class="nav-link" href="/"><i class="fa-solid fa-house me-1"></i>Home</a>
+          <a class="nav-link" href="/" title="Inicio"><i class="fa-solid fa-house"></i></a>
           <a class="nav-link" href="login.html">Login</a>
         </div>
       </div>
@@ -30,8 +30,9 @@
           <p class="text-muted mb-4">Con tu código personal puedes ver todo lo que te dejó tu amigue secreto 🥹</p>
           <div class="card card-action p-4 mb-4" style="max-width: 400px; margin: 0 auto;">
             <label class="form-label text-start">Tu código de visualización</label>
-            <input type="text" class="form-control form-control-lg mb-3" id="codigoVision" 
+            <input type="text" class="form-control form-control-lg mb-2" id="codigoVision" 
                    placeholder="Pega tu código aquí">
+            <div id="nombreBuzonVer" class="mb-3 text-success fw-medium small d-none"></div>
             <button class="btn btn-primary btn-lg w-100 rounded-pill" id="btnAbrir">
               <i class="bi bi-inbox"></i> Abrir buzón
             </button>
@@ -71,6 +72,29 @@
     const nombreBuzon = document.getElementById('nombreBuzon');
     const listaItems = document.getElementById('listaItems');
     const buzonVacio = document.getElementById('buzonVacio');
+
+    let debounceTimer;
+    codigoInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const el = document.getElementById('nombreBuzonVer');
+      el.classList.add('d-none');
+      const codigo = codigoInput.value.trim();
+      if (!codigo || codigo.length < 8) return;
+      debounceTimer = setTimeout(async () => {
+        try {
+          const r = await fetch(`/api/buzon-nombre?codigoVision=${encodeURIComponent(codigo)}`);
+          const data = await r.json().catch(() => ({}));
+          if (r.ok) {
+            el.textContent = `✓ Este es tu buzón (${data.nombre})`;
+            el.classList.remove('d-none');
+          } else {
+            el.classList.add('d-none');
+          }
+        } catch (_) {
+          el.classList.add('d-none');
+        }
+      }, 400);
+    });
 
     function mostrarAlerta(msg, tipo = 'danger') {
       const el = document.getElementById('alerta');
