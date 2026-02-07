@@ -108,9 +108,10 @@
       return map[t] || 'bi-gift';
     }
 
-    function renderItem(item) {
+    function renderItem(item, codigoVision) {
       const div = document.createElement('div');
-      div.className = 'buzon-item p-4 mb-3';
+      div.className = 'buzon-item p-4 mb-3 position-relative';
+      div.dataset.itemId = item.id;
       const icono = iconoTipo(item.tipo);
       let contenido = '';
       if (item.tipo === 'texto') {
@@ -141,6 +142,9 @@
             <p class="text-muted small mb-1">💌 De alguien secreto · ${fecha}</p>
             ${contenido}
           </div>
+          <button type="button" class="btn btn-sm btn-outline-danger ms-2" title="Eliminar mensaje" data-codigo="${escapeHtml(codigoVision)}" data-item-id="${escapeHtml(item.id)}">
+            <i class="bi bi-trash"></i>
+          </button>
         </div>
       `;
       return div;
@@ -169,13 +173,35 @@
           buzonVacio.classList.remove('d-none');
         } else {
           buzonVacio.classList.add('d-none');
-          data.items.forEach((item) => listaItems.appendChild(renderItem(item)));
+          data.items.forEach((item) => {
+            const el = renderItem(item, codigo);
+            listaItems.appendChild(el);
+          });
         }
       } catch (err) {
         mostrarAlerta(err.message || 'Código incorrecto. Revisa y prueba de nuevo.');
       }
       btnAbrir.disabled = false;
     }
+
+    listaItems.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-item-id]');
+      if (!btn) return;
+      const itemId = btn.dataset.itemId;
+      const codigoV = btn.dataset.codigo;
+      if (!confirm('¿Eliminar este mensaje?')) return;
+      try {
+        const r = await fetch(`/api/buzon/item?codigoVision=${encodeURIComponent(codigoV)}&itemId=${encodeURIComponent(itemId)}`, { method: 'DELETE' });
+        const resp = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(resp.error || 'Error');
+        const itemEl = btn.closest('.buzon-item');
+        itemEl.remove();
+        if (listaItems.children.length === 0) buzonVacio.classList.remove('d-none');
+        mostrarAlerta('Mensaje eliminado ✓', 'success');
+      } catch (err) {
+        mostrarAlerta(err.message || 'No se pudo eliminar', 'danger');
+      }
+    });
 
     btnAbrir.addEventListener('click', abrirBuzon);
     codigoInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') abrirBuzon(); });

@@ -246,6 +246,22 @@ app.get('/api/buzon', (req, res) => {
   res.json({ nombre: buzton.nombre, items: buzton.items || [] });
 });
 
+app.delete('/api/buzon/item', (req, res) => {
+  try {
+    const { codigoVision, itemId } = req.query;
+    const data = loadData();
+    const buzton = data.buzzones.find((b) => b.codigoVision === codigoVision);
+    if (!buzton) return res.status(404).json({ error: 'Código de visualización no válido' });
+    const idx = (buzton.items || []).findIndex((i) => i.id === itemId);
+    if (idx === -1) return res.status(404).json({ error: 'Mensaje no encontrado' });
+    buzton.items.splice(idx, 1);
+    saveData(data);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
